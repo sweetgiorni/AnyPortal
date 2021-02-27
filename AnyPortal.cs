@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace AnyPortal
 {
-    [BepInPlugin("org.spub.plugins.anyportal", "AnyPortal", "1.0.0.0")]
+    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.0.0")]
     public class AnyPortal : BaseUnityPlugin
     {
         public Harmony harmony;
@@ -78,7 +78,6 @@ namespace AnyPortal
             }
             else
             {
-                Debug.Log("Instantiating dropdownHolder");
                 dropdownHolder = GameObject.Instantiate(dropdownTemplate);
                 dropdownHolder.transform.SetParent(null);
                 dropdownHolder.name = "AnyPortalControls";
@@ -89,6 +88,18 @@ namespace AnyPortal
                 mapButton.onClick.AddListener(MapButtonClicked);
             }
 
+            if (dropdownHolder.transform.parent == null)
+            {
+                var uiRoot = GameObject.Find("IngameGui(Clone)");
+                if (!uiRoot)
+                {
+                    Debug.LogError("Unable to find root UI GameObject!");
+                    return;
+                }
+                dropdownHolder.transform.SetParent(uiRoot.transform);
+                dropdownHolder.transform.localScale = new Vector3(1f, 1f, 1f);
+                dropdownHolder.transform.localPosition = new Vector3(0, -50, 0);
+            }
         }
 
         private void OnDestroy()
@@ -172,6 +183,9 @@ namespace AnyPortal
         {
             static void Postfix(TeleportWorld __instance, ref ZNetView ___m_nview, ref bool __result)
             {
+                lastPortalInteracted = __instance;
+                lastPortalZNetView = ___m_nview;
+
                 if (!__result)
                 {
                     return;
@@ -181,30 +195,15 @@ namespace AnyPortal
                 {
                     InitializeDropdownHolder();
                 }
-                if (dropdownHolder.transform.parent == null)
-                {
-                    var uiRoot = GameObject.Find("IngameGui(Clone)");
-                    if (!uiRoot)
-                    {
-                        Debug.LogError("Unable to find root UI GameObject!");
-                        return;
-                    }
-                    dropdownHolder.transform.SetParent(uiRoot.transform);
-                    dropdownHolder.transform.localScale = new Vector3(1f, 1f, 1f);
-                    dropdownHolder.transform.localPosition = new Vector3(0, -50, 0);
-                }
-                lastPortalInteracted = __instance;
-                lastPortalZNetView = ___m_nview;
+                portalList.Clear();
                 dropdown.onValueChanged.RemoveAllListeners();
                 dropdown.onValueChanged.AddListener(delegate
                 {
                     DropdownValueChanged(dropdown);
                 });
-                dropdownHolder.SetActive(true);
-                portalList.Clear();
-                int index = 0;
-                ZDOMan.instance.GetAllZDOsWithPrefabIterative(Game.instance.m_portalPrefab.name, portalList, ref index);
                 dropdown.options.Clear();
+                dropdownHolder.SetActive(true);
+                ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, portalList);
                 foreach (ZDO portalZDO in portalList)
                 {
                     float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
