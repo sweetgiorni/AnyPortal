@@ -1,0 +1,16 @@
+AnyPortal v1.0.0.0
+Created by sweetgiorni
+A BepInEx Valheim mod
+
+
+Replaces the default portal-pairing mechanism with a dropdown to select your destination portal.
+
+
+Build the solution with Visual Studio 2019. You will need to add references to the valheim and Unity dlls.
+
+
+Requirements
+BepInEx
+
+Install
+Copy the compiled AnyPortal.dll to BepInEx/plugins/AnyPortal/. Also copy the file "anyportal" in the root of this repository. That is the Unity AssetBundle that contains the UI prefab. At some point I will post the Unity prefab or project so as to complete this repository.
