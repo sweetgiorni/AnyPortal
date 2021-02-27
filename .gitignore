@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Don't package Valheim proprietary assets...
+libs/*.dll
+
+
 # User-specific files
 *.rsuser
 *.suo
