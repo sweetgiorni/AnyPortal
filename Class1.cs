@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 namespace AnyPortal
@@ -17,62 +17,42 @@ namespace AnyPortal
         public Harmony harmony;
 
         public static GameObject dropdownHolder;
+        public static AssetBundle anyPortalAssetBundle;
+        public static TeleportWorld lastPortalInteracted;
+        public static ZNetView lastPortalZNetView;
+        public static List<ZDO> portalList;
 
         private void Awake()
         {
-            var uiRoot = GameObject.Find("IngameGui(Clone)");
-            dropdownHolder = new GameObject("DropdownHolder");
-            dropdownHolder.transform.SetParent(uiRoot.transform);
-            dropdownHolder.AddComponent<CanvasRenderer>();
-            var rectTransform = dropdownHolder.AddComponent<RectTransform>();
-            rectTransform.sizeDelta = new Vector2(540f, 200f);
-            rectTransform.offsetMin = new Vector2(-50f, 50f);
-            rectTransform.offsetMax = new Vector2(50f, 50f);
-            rectTransform.localScale = new Vector3(.5f, .5f, .5f);
-            var dropdown = dropdownHolder.AddComponent<UnityEngine.UI.Dropdown>();
-            var image = dropdownHolder.AddComponent<UnityEngine.UI.Image>();
-            String spritePath = "Assets/Texture2D/sactx-2048x2048-Uncompressed-UIAtlas-97597a23_0.png";
-            var sprite = Resources.Load<Sprite>(spritePath);
-            if (sprite == null)
+            portalList = new List<ZDO>();
+
+            string path = Path.Combine(Paths.BepInExRootPath, "scripts\\anyportal");
+            Debug.Log(path);
+            if (!File.Exists(path))
             {
-                Debug.LogError("Failed to load sprite from resources: " + spritePath);
+                Debug.Log($"File {path} does not exist!");
+            }
+            anyPortalAssetBundle = AssetBundle.LoadFromFile(path);
+            if (!anyPortalAssetBundle)
+            {
+                Debug.LogError($"Failed to load assset bundle from file {path}");
             }
             else
             {
-                image.sprite = sprite;
+                var dropdownTemplate = anyPortalAssetBundle.LoadAsset<GameObject>("assets/dropdown.prefab");
+                if (!dropdownTemplate)
+                {
+                    Debug.Log("Failed to load dropdown asset");
+                }
+                else
+                {
+                    Debug.Log("Loaded dropdown prefab!");
+                    var uiRoot = GameObject.Find("IngameGui(Clone)");
+                    dropdownHolder = GameObject.Instantiate(dropdownTemplate, uiRoot.transform);
+                    dropdownHolder.name = "AnyPortalDropdown";
+                    dropdownHolder.SetActive(false);
+                }
             }
-            GameObject labelGO = new GameObject();
-            labelGO.transform.SetParent(dropdownHolder.transform);
-            var captionText = labelGO.AddComponent<UnityEngine.UI.Text>();
-            labelGO.AddComponent<CanvasRenderer>();
-            labelGO.AddComponent<RectTransform>();
-            captionText.text = "Select a portal";
-            dropdown.captionText = captionText;
-
-            var options = new List<UnityEngine.UI.Dropdown.OptionData>();
-            var optionData1 = new UnityEngine.UI.Dropdown.OptionData();
-            optionData1.text = "Portal1";
-            options.Add(optionData1);
-            dropdown.options = options;
-            dropdownHolder.layer = 5;
-
-            var templateGO = new GameObject();
-            templateGO.transform.SetParent(dropdownHolder.transform);
-            templateGO.AddComponent<CanvasRenderer>();
-            templateGO.AddComponent<RectTransform>();
-            var templateImage = templateGO.AddComponent<UnityEngine.UI.Image>();
-            templateImage.sprite = Resources.Load<Sprite>("unity_builtin_extra/UISprite");
-            templateImage.material = null;
-            var templateScrollRect = templateGO.AddComponent<UnityEngine.UI.ScrollRect>();
-            //templateScrollRect.content =  TODO
-
-            var viewportGO = new GameObject();
-            viewportGO.transform.SetParent(dropdownHolder.transform);
-            viewportGO.AddComponent<CanvasRenderer>();
-            viewportGO.AddComponent<RectTransform>();
-            viewportGO.AddComponent<UnityEngine.UI.Image>();
-
-
 
             harmony = new Harmony("org.spub.plugins.anyportal.harmony");
             harmony.PatchAll();
@@ -81,34 +61,94 @@ namespace AnyPortal
         private void OnDestroy()
         {
             harmony.UnpatchSelf();
+            if (anyPortalAssetBundle)
+            {
+                anyPortalAssetBundle.Unload(false);
+            }
             if (dropdownHolder)
             {
                 Destroy(dropdownHolder);
             }
         }
 
+        private void Update()
+        {
+            if (dropdownHolder && dropdownHolder.activeSelf && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("JoyMenu")))
+            {
+                dropdownHolder.SetActive(false);
+                return;
+            }
+        }
+
+        public static void DropdownValueChanged(Dropdown change)
+        {
+            Debug.Log("New Value : " + change.value);
+            if (lastPortalZNetView && lastPortalZNetView.IsValid())
+            {
+                var selectedPortalIdx = change.value;
+                if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
+                {
+                    Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
+                    return;
+                }
+                var selectedPortal = portalList[selectedPortalIdx];
+                lastPortalZNetView.GetZDO().Set("target", selectedPortal.m_uid);
+            }
+        }
 
         [HarmonyPatch(typeof(TeleportWorld), "Interact")]
-        static class ShipAwake_Patch
+        static class PortalInteractPatch
         {
-            static bool Prefix(TeleportWorld __instance, Humanoid human, bool hold, ref bool __result)
+            static bool Prefix(TeleportWorld __instance, ref ZNetView ___m_nview, Humanoid human, bool hold, ref bool __result)
             {
                 if (hold)
                 {
                     __result = false;
                     return false;
                 }
+
                 if (PrivateArea.CheckAccess(__instance.transform.position, 0f, true))
                 {
-                    //TextInput.instance.RequestText(__instance, "$piece_portal_tag", 10);
-                    //UnityEngine.UI.Dropdown dropdown = new UnityEngine.UI.Dropdown();
-                    dropdownHolder.SetActive(true);
+                    if (dropdownHolder)
+                    {
+                        var dropdown = dropdownHolder.GetComponent<Dropdown>();
+                        lastPortalInteracted = __instance;
+                        lastPortalZNetView = ___m_nview;
+                        dropdown.onValueChanged.AddListener(delegate {
+                            DropdownValueChanged(dropdown);
+                        });
+                        dropdownHolder.SetActive(true);
+                        var label = dropdownHolder.GetComponentInChildren<Text>();
+                        label.text = "Loading portal list...";
+                        portalList.Clear();
+                        int index = 0;
+                        ZDOMan.instance.GetAllZDOsWithPrefabIterative(Game.instance.m_portalPrefab.name, portalList, ref index);
+                        label.text = "Select a portal...";
+                        dropdown.options.Clear();
+                        foreach (ZDO portalZDO in portalList)
+                        {
+                            float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
+
+                            dropdown.options.Add(new Dropdown.OptionData("Distance: " + (int)distance));
+                        }
+                    }
                     __result = true;
                     return false;
                 }
                 human.Message(MessageHud.MessageType.Center, "$piece_noaccess", 0, null);
                 __result = true;
                 return false;
+            }
+        }
+
+        // We want to hook into TextInput's IsVisible method so our panel gets included in other UI logic
+        [HarmonyPatch(typeof(InventoryGui), "IsVisible")]
+        static class InventoryGuiIsVisiblePatch
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (dropdownHolder && dropdownHolder.activeSelf)
+                    __result = true;
             }
         }
     }
