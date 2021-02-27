@@ -17,45 +17,78 @@ namespace AnyPortal
         public Harmony harmony;
 
         public static GameObject dropdownHolder;
+        public static Dropdown dropdown;
+        public static Button mapButton;
+
         public static AssetBundle anyPortalAssetBundle;
         public static TeleportWorld lastPortalInteracted;
         public static ZNetView lastPortalZNetView;
         public static List<ZDO> portalList;
 
+        public const string AssetBundleName = "anyportal";
+
         private void Awake()
         {
             portalList = new List<ZDO>();
-
-            string path = Path.Combine(Paths.BepInExRootPath, "scripts\\anyportal");
-            Debug.Log(path);
-            if (!File.Exists(path))
+            dropdownHolder = null;
+            dropdown = null;
+            List<string> assetBundleSearchPaths = new List<string> {
+                Path.Combine(Paths.BepInExRootPath, "scripts"),
+                Path.Combine(Paths.PluginPath, "AnyPortal"),
+                Assembly.GetExecutingAssembly().Location
+            };
+            string assetBundlePath = "";
+            foreach (string searchPath in assetBundleSearchPaths)
             {
-                Debug.Log($"File {path} does not exist!");
+                if (searchPath == null || searchPath == "") continue;
+                var tmpPath = Path.Combine(searchPath, AssetBundleName);
+                Debug.Log($"Checking for file {tmpPath}");
+                if (File.Exists(tmpPath))
+                {
+                    assetBundlePath = tmpPath;
+                    break;
+                }
             }
-            anyPortalAssetBundle = AssetBundle.LoadFromFile(path);
-            if (!anyPortalAssetBundle)
+            if (assetBundlePath == "")
             {
-                Debug.LogError($"Failed to load assset bundle from file {path}");
+                Debug.LogError($"Couldn't find an AssetBundle named \"{AssetBundleName}\" in the given search paths. Is it really there?");
+                return;
             }
             else
             {
-                var dropdownTemplate = anyPortalAssetBundle.LoadAsset<GameObject>("assets/dropdown.prefab");
-                if (!dropdownTemplate)
-                {
-                    Debug.Log("Failed to load dropdown asset");
-                }
-                else
-                {
-                    Debug.Log("Loaded dropdown prefab!");
-                    var uiRoot = GameObject.Find("IngameGui(Clone)");
-                    dropdownHolder = GameObject.Instantiate(dropdownTemplate, uiRoot.transform);
-                    dropdownHolder.name = "AnyPortalDropdown";
-                    dropdownHolder.SetActive(false);
-                }
+                Debug.Log($"Found AssetBundle at {assetBundlePath}");
+            }
+            anyPortalAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+            if (!anyPortalAssetBundle)
+            {
+                Debug.LogError($"Failed to load assset bundle from file {assetBundlePath}");
+                return;
             }
 
             harmony = new Harmony("org.spub.plugins.anyportal.harmony");
             harmony.PatchAll();
+        }
+
+        public static void InitializeDropdownHolder()
+        {
+            var dropdownTemplate = anyPortalAssetBundle.LoadAsset<GameObject>("assets/anyportal.prefab");
+            if (!dropdownTemplate)
+            {
+                Debug.LogError("Failed to load dropdown asset");
+            }
+            else
+            {
+                Debug.Log("Instantiating dropdownHolder");
+                dropdownHolder = GameObject.Instantiate(dropdownTemplate);
+                dropdownHolder.transform.SetParent(null);
+                dropdownHolder.name = "AnyPortalControls";
+                dropdownHolder.SetActive(false);
+                dropdown = dropdownHolder.transform.Find("Dropdown").GetComponent<Dropdown>();
+                dropdownHolder.transform.Find("Dropdown").Find("Label").GetComponent<Text>().text = "Choose a destination...";
+                mapButton = dropdownHolder.transform.Find("MapButton").GetComponent<Button>();
+                mapButton.onClick.AddListener(MapButtonClicked);
+            }
+
         }
 
         private void OnDestroy()
@@ -73,73 +106,152 @@ namespace AnyPortal
 
         private void Update()
         {
-            if (dropdownHolder && dropdownHolder.activeSelf && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("JoyMenu")))
+            if (dropdownHolder != null && dropdownHolder.activeSelf && (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.KeypadEnter) || ZInput.GetButtonDown("JoyMenu") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
                 dropdownHolder.SetActive(false);
                 return;
             }
         }
 
+        public static void MapButtonClicked()
+        {
+            if (!lastPortalInteracted || !lastPortalZNetView || !lastPortalZNetView.IsValid())
+                return;
+            // Get selected portal pos
+            dropdownHolder.SetActive(false);
+            TextInput.instance.Hide();
+            var selectedPortalZDOID = lastPortalZNetView.GetZDO().GetZDOID("target");// GetPosition();
+            if (selectedPortalZDOID.IsNone()) return;
+            var selectedPortalZDO = ZDOMan.instance.GetZDO(selectedPortalZDOID);
+            if (!selectedPortalZDO.IsValid()) return;
+            Vector3 selectedPortalPos = selectedPortalZDO.GetPosition();
+            // Using 0 for targetPeerID should basically be the equivalent of a network loopback (localhost)
+            ZRoutedRpc.instance.InvokeRoutedRPC(0, "ChatMessage", new object[] { selectedPortalPos, 3, "AnyPortal", "PortalName" });
+            Minimap.instance.ShowPointOnMap(selectedPortalPos);
+        }
+
         public static void DropdownValueChanged(Dropdown change)
         {
-            Debug.Log("New Value : " + change.value);
-            if (lastPortalZNetView && lastPortalZNetView.IsValid())
+            if (!(lastPortalZNetView && lastPortalZNetView.IsValid()))
             {
-                var selectedPortalIdx = change.value;
-                if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
-                {
-                    Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
-                    return;
-                }
-                var selectedPortal = portalList[selectedPortalIdx];
-                lastPortalZNetView.GetZDO().Set("target", selectedPortal.m_uid);
+                Debug.LogError("lastPortalZNetView is not a valid reference");
+                return;
+            }
+            var selectedPortalIdx = change.value;
+            if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
+            {
+                Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
+                return;
+            }
+            var selectedPortal = portalList[selectedPortalIdx];
+            lastPortalZNetView.GetZDO().SetOwner(ZDOMan.instance.GetMyID());
+            lastPortalZNetView.GetZDO().Set("target", selectedPortal.m_uid);
+            ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
+        }
+
+        [HarmonyPatch(typeof(Game), "Start")]
+        static class GameStartPatch
+        {
+            static void Postfix(Game __instance)
+            {
+                __instance.StopCoroutine("ConnectPortals");
+            }
+        }
+
+        [HarmonyPatch(typeof(Game), "ConnectPortals")]
+        static class GameConnectPortalsPatch
+        {
+            static void Postfix(Game __instance)
+            {
+                Debug.LogWarning("Connect portals is running - it's supposed to be disabled!?!?");
             }
         }
 
         [HarmonyPatch(typeof(TeleportWorld), "Interact")]
         static class PortalInteractPatch
         {
-            static bool Prefix(TeleportWorld __instance, ref ZNetView ___m_nview, Humanoid human, bool hold, ref bool __result)
+            static void Postfix(TeleportWorld __instance, ref ZNetView ___m_nview, ref bool __result)
             {
-                if (hold)
+                if (!__result)
                 {
-                    __result = false;
-                    return false;
+                    return;
                 }
 
-                if (PrivateArea.CheckAccess(__instance.transform.position, 0f, true))
+                if (dropdownHolder == null)
                 {
-                    if (dropdownHolder)
+                    InitializeDropdownHolder();
+                }
+                if (dropdownHolder.transform.parent == null)
+                {
+                    var uiRoot = GameObject.Find("IngameGui(Clone)");
+                    if (!uiRoot)
                     {
-                        var dropdown = dropdownHolder.GetComponent<Dropdown>();
-                        lastPortalInteracted = __instance;
-                        lastPortalZNetView = ___m_nview;
-                        dropdown.onValueChanged.AddListener(delegate {
-                            DropdownValueChanged(dropdown);
-                        });
-                        dropdownHolder.SetActive(true);
-                        var label = dropdownHolder.GetComponentInChildren<Text>();
-                        label.text = "Loading portal list...";
-                        portalList.Clear();
-                        int index = 0;
-                        ZDOMan.instance.GetAllZDOsWithPrefabIterative(Game.instance.m_portalPrefab.name, portalList, ref index);
-                        label.text = "Select a portal...";
-                        dropdown.options.Clear();
-                        foreach (ZDO portalZDO in portalList)
-                        {
-                            float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
+                        Debug.LogError("Unable to find root UI GameObject!");
+                        return;
+                    }
+                    dropdownHolder.transform.SetParent(uiRoot.transform);
+                    dropdownHolder.transform.localScale = new Vector3(1f, 1f, 1f);
+                    dropdownHolder.transform.localPosition = new Vector3(0, -50, 0);
+                }
+                lastPortalInteracted = __instance;
+                lastPortalZNetView = ___m_nview;
+                dropdown.onValueChanged.RemoveAllListeners();
+                dropdown.onValueChanged.AddListener(delegate
+                {
+                    DropdownValueChanged(dropdown);
+                });
+                dropdownHolder.SetActive(true);
+                portalList.Clear();
+                int index = 0;
+                ZDOMan.instance.GetAllZDOsWithPrefabIterative(Game.instance.m_portalPrefab.name, portalList, ref index);
+                dropdown.options.Clear();
+                foreach (ZDO portalZDO in portalList)
+                {
+                    float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
 
-                            dropdown.options.Add(new Dropdown.OptionData("Distance: " + (int)distance));
+                    dropdown.options.Add(new Dropdown.OptionData($"Destination portal \"{portalZDO.GetString("tag")}\"  --  Distance: " + (int)distance));
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(TeleportWorld), "GetHoverText")]
+        static class TeleportWorldGetHoverTextPatch
+        {
+            static bool Prefix(TeleportWorld __instance, ref ZNetView ___m_nview, ref string __result)
+            {
+                string destPortalTag = "None";
+                string tag = __instance.GetText();
+                if (___m_nview == null || !___m_nview.IsValid())
+                {
+                    Debug.LogError("HoverTextPatch: ___m_nview is not valid");
+                }
+                else
+                {
+                    ZDOID targetZDOID = ___m_nview.GetZDO().GetZDOID("target");
+                    if (!targetZDOID.IsNone())
+                    {
+                        var destPortalZDO = ZDOMan.instance.GetZDO(targetZDOID);
+                        if (destPortalZDO == null || !destPortalZDO.IsValid())
+                        {
+                            destPortalTag = "None";
+                            // Reset the target since it's bad...
+                            if (destPortalZDO != null)
+                            {
+                                destPortalZDO.Set("target", ZDOID.None);
+                                ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
+                            }
+                        }
+                        else
+                        {
+                            destPortalTag = destPortalZDO.GetString("tag", "None");
                         }
                     }
-                    __result = true;
-                    return false;
                 }
-                human.Message(MessageHud.MessageType.Center, "$piece_noaccess", 0, null);
-                __result = true;
+                __result = Localization.instance.Localize($"Portal Tag: {tag}\nDestination Portal Tag: {destPortalTag}\n[<color=yellow><b>$KEY_Use</b></color> Configure Portal]");
                 return false;
             }
         }
+
 
         // We want to hook into TextInput's IsVisible method so our panel gets included in other UI logic
         [HarmonyPatch(typeof(InventoryGui), "IsVisible")]
@@ -147,7 +259,7 @@ namespace AnyPortal
         {
             static void Postfix(ref bool __result)
             {
-                if (dropdownHolder && dropdownHolder.activeSelf)
+                if (dropdownHolder != null && dropdownHolder.activeSelf)
                     __result = true;
             }
         }
