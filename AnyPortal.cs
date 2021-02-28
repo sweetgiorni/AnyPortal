@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace AnyPortal
 {
-    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.2")]
+    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.3")]
     public class AnyPortal : BaseUnityPlugin
     {
         public Harmony harmony;
