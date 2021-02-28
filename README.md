@@ -1,4 +1,4 @@
-# AnyPortal v1.0.0.0
+# AnyPortal
 ## A BepInEx Valheim mod
 ## By sweetgiorni
 ### https://github.com/sweetgiorni/AnyPortal
