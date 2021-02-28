@@ -170,9 +170,26 @@ namespace AnyPortal
         [HarmonyPatch(typeof(Game), "Start")]
         static class GameStartPatch
         {
-            static void Postfix(Game __instance)
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                __instance.StopCoroutine("ConnectPortals");
+                bool shouldNop = false;
+                foreach (CodeInstruction instruction in instructions)
+                {
+                    if (instruction.opcode == OpCodes.Ldstr && ((System.String)instruction.operand) == "ConnectPortals")
+                    {
+                        shouldNop = true;
+                        yield return new CodeInstruction(OpCodes.Nop);
+                    }
+                    else if (shouldNop)
+                    {
+                        yield return new CodeInstruction(OpCodes.Nop);
+                        shouldNop = false;
+
+                    }
+                    else
+                        yield return instruction;
+                }
+                yield break;
             }
         }
 
@@ -181,7 +198,7 @@ namespace AnyPortal
         {
             static void Postfix(Game __instance)
             {
-                Debug.LogWarning("Connect portals is running - it's supposed to be disabled!?!?");
+                Debug.LogError("Connect portals is running - it's supposed to be disabled!?!?");
             }
         }
 
