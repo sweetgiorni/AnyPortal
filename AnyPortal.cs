@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -105,15 +105,12 @@ namespace AnyPortal
 
         private void OnDestroy()
         {
-            harmony.UnpatchSelf();
+            if (harmony != null)
+                harmony.UnpatchSelf();
             if (anyPortalAssetBundle)
-            {
                 anyPortalAssetBundle.Unload(false);
-            }
-            if (dropdownHolder)
-            {
+            if (dropdownHolder != null)
                 Destroy(dropdownHolder);
-            }
         }
 
         private void Update()
@@ -144,13 +141,22 @@ namespace AnyPortal
 
         public static void DropdownValueChanged(Dropdown change)
         {
+            Debug.Log($"Dropdown value: {dropdown.value}");
             if (!(lastPortalZNetView && lastPortalZNetView.IsValid()))
             {
                 Debug.LogError("lastPortalZNetView is not a valid reference");
                 return;
             }
-            var selectedPortalIdx = change.value;
-            if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
+            if (change.value == 0) // User selected "None" option
+            {
+                Debug.Log("Unlinking portal");
+                lastPortalZNetView.GetZDO().SetOwner(ZDOMan.instance.GetMyID());
+                lastPortalZNetView.GetZDO().Set("target", ZDOID.None);
+                ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
+                return;
+            }
+            var selectedPortalIdx = change.value + 1; // Need to +1 here because the first option is always "None"
+            if (selectedPortalIdx < 1 || selectedPortalIdx >= portalList.Count)
             {
                 Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
                 return;
@@ -215,13 +221,14 @@ namespace AnyPortal
                     DropdownValueChanged(dropdown);
                 });
                 dropdown.options.Clear();
+                dropdown.options.Add(new Dropdown.OptionData("No destination"));
                 dropdownHolder.SetActive(true);
                 ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, portalList);
                 foreach (ZDO portalZDO in portalList)
                 {
                     float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
 
-                    dropdown.options.Add(new Dropdown.OptionData($"Destination portal \"{portalZDO.GetString("tag")}\"  --  Distance: " + (int)distance));
+                    dropdown.options.Add(new Dropdown.OptionData($"\"{portalZDO.GetString("tag")}\"  --  Distance: " + (int)distance));
                 }
             }
         }
