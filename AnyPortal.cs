@@ -155,8 +155,8 @@ namespace AnyPortal
                 ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
                 return;
             }
-            var selectedPortalIdx = change.value + 1; // Need to +1 here because the first option is always "None"
-            if (selectedPortalIdx < 1 || selectedPortalIdx >= portalList.Count)
+            var selectedPortalIdx = change.value - 1; // Need to +1 here because the first option is always "None"
+            if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
             {
                 Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
                 return;
@@ -205,6 +205,7 @@ namespace AnyPortal
         [HarmonyPatch(typeof(TeleportWorld), "Interact")]
         static class PortalInteractPatch
         {
+            // Patch the max string length for the portal's tag
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
                 foreach (CodeInstruction instruction in instructions)
@@ -257,6 +258,8 @@ namespace AnyPortal
             {
                 string destPortalTag = "None";
                 string tag = __instance.GetText();
+                if (tag == "")
+                    tag = "Empty tag";
                 if (___m_nview == null || !___m_nview.IsValid())
                 {
                     Debug.LogError("HoverTextPatch: ___m_nview is not valid");
@@ -269,17 +272,19 @@ namespace AnyPortal
                         var destPortalZDO = ZDOMan.instance.GetZDO(targetZDOID);
                         if (destPortalZDO == null || !destPortalZDO.IsValid())
                         {
+                            Debug.Log("HoverText: destPortalZDO is null or invalid");
                             destPortalTag = "None";
                             // Reset the target since it's bad...
                             if (destPortalZDO != null)
                             {
+                                Debug.Log("HoverText: Clearing out the target");
                                 destPortalZDO.Set("target", ZDOID.None);
                                 ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
                             }
                         }
                         else
                         {
-                            destPortalTag = destPortalZDO.GetString("tag", "None");
+                            destPortalTag = destPortalZDO.GetString("tag", "Empty tag");
                         }
                     }
                 }
