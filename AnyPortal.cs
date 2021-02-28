@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace AnyPortal
 {
-    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.1")]
+    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.2")]
     public class AnyPortal : BaseUnityPlugin
     {
         public Harmony harmony;
@@ -33,10 +33,15 @@ namespace AnyPortal
             portalList = new List<ZDO>();
             dropdownHolder = null;
             dropdown = null;
+            string asssemblyLocation = Assembly.GetExecutingAssembly().Location;
+            if (asssemblyLocation != null && asssemblyLocation != "")
+            {
+                asssemblyLocation = Path.GetDirectoryName(asssemblyLocation);
+            }
             List<string> assetBundleSearchPaths = new List<string> {
                 Path.Combine(Paths.BepInExRootPath, "scripts"),
                 Path.Combine(Paths.PluginPath, "AnyPortal"),
-                Assembly.GetExecutingAssembly().Location
+                asssemblyLocation
             };
             string assetBundlePath = "";
             foreach (string searchPath in assetBundleSearchPaths)
