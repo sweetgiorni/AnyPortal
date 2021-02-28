@@ -7,6 +7,9 @@
 libs/*.dll
 
 
+*.zip
+AnyPortalRelease/*
+
 # User-specific files
 *.rsuser
 *.suo
