@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -181,6 +182,18 @@ namespace AnyPortal
         [HarmonyPatch(typeof(TeleportWorld), "Interact")]
         static class PortalInteractPatch
         {
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                foreach (CodeInstruction instruction in instructions)
+                {
+                    if (instruction.opcode == OpCodes.Ldc_I4_S)
+                    {
+                        instruction.operand = SByte.MaxValue;
+                    }
+                    yield return instruction;
+                }
+                yield break;
+            }
             static void Postfix(TeleportWorld __instance, ref ZNetView ___m_nview, ref bool __result)
             {
                 lastPortalInteracted = __instance;
