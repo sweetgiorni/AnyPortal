@@ -141,7 +141,6 @@ namespace AnyPortal
 
         public static void DropdownValueChanged(Dropdown change)
         {
-            Debug.Log($"Dropdown value: {dropdown.value}");
             if (!(lastPortalZNetView && lastPortalZNetView.IsValid()))
             {
                 Debug.LogError("lastPortalZNetView is not a valid reference");
@@ -239,15 +238,25 @@ namespace AnyPortal
                     DropdownValueChanged(dropdown);
                 });
                 dropdown.options.Clear();
+                // If the portal currently has a target configured, make sure that is the value selected in the dropdown
+                // Otherwise, set the dropdown value to 0 (No destination)
+                ZDOID targetZDOID = ___m_nview.GetZDO().GetZDOID("target");
+
                 dropdown.options.Add(new Dropdown.OptionData("No destination"));
-                dropdownHolder.SetActive(true);
                 ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, portalList);
+                int index = 0;
                 foreach (ZDO portalZDO in portalList)
                 {
                     float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
 
                     dropdown.options.Add(new Dropdown.OptionData($"\"{portalZDO.GetString("tag")}\"  --  Distance: " + (int)distance));
+                    if (portalZDO.m_uid == targetZDOID)
+                        dropdown.value = index + 1;
+                    index += 1;
                 }
+                if (targetZDOID == ZDOID.None)
+                    dropdown.value = 0;
+                dropdownHolder.SetActive(true);
             }
         }
 
@@ -275,12 +284,9 @@ namespace AnyPortal
                             Debug.Log("HoverText: destPortalZDO is null or invalid");
                             destPortalTag = "None";
                             // Reset the target since it's bad...
-                            if (destPortalZDO != null)
-                            {
-                                Debug.Log("HoverText: Clearing out the target");
-                                destPortalZDO.Set("target", ZDOID.None);
-                                ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
-                            }
+                            Debug.Log("HoverText: Clearing out the target");
+                            ___m_nview.GetZDO().Set("target", ZDOID.None);
+                            ZDOMan.instance.ForceSendZDO(___m_nview.GetZDO().m_uid);
                         }
                         else
                         {
