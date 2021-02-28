@@ -206,6 +206,20 @@ namespace AnyPortal
             }
         }
 
+        
+
+        [HarmonyPatch(typeof(ZDOMan), "CreateSyncList")]
+        static class ZDOmanCreateSyncListPatch
+        {
+            static void Prefix(List<ZDO> toSync)
+            {
+                if (ZNet.instance.IsServer())
+                {
+                    ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, toSync);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(TeleportWorld), "Interact")]
         static class PortalInteractPatch
         {
