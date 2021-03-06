@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -21,6 +21,7 @@ namespace AnyPortal
         public static GameObject dropdownHolder;
         public static Dropdown dropdown;
         public static Button mapButton;
+        public static Button okButton;
 
         public static AssetBundle anyPortalAssetBundle;
         public static TeleportWorld lastPortalInteracted;
@@ -46,20 +47,29 @@ namespace AnyPortal
 
         public static void InitializeDropdownHolder()
         {
+            var sprite = TextInput.instance.m_panel.GetComponent<Image>();
             var dropdownTemplate = anyPortalAssetBundle.LoadAsset<GameObject>("assets/anyportal.prefab");
             if (!dropdownTemplate)
             {
                 Debug.LogError("Failed to load dropdown asset");
                 return;
             }
-                dropdownHolder = GameObject.Instantiate(dropdownTemplate);
-                dropdownHolder.transform.SetParent(null);
-                dropdownHolder.name = "AnyPortalControls";
-                dropdownHolder.SetActive(false);
-                dropdown = dropdownHolder.transform.Find("Dropdown").GetComponent<Dropdown>();
-                dropdownHolder.transform.Find("Dropdown").Find("Label").GetComponent<Text>().text = "Choose a destination...";
-                mapButton = dropdownHolder.transform.Find("MapButton").GetComponent<Button>();
-                mapButton.onClick.AddListener(MapButtonClicked);
+            dropdownHolder = GameObject.Instantiate(dropdownTemplate);
+            dropdownHolder.transform.SetParent(null);
+            dropdownHolder.name = "AnyPortalControls";
+            dropdownHolder.SetActive(false);
+            dropdown = dropdownHolder.transform.Find("Dropdown").GetComponent<Dropdown>();
+            dropdownHolder.transform.Find("Dropdown").Find("Label").GetComponent<Text>().text = "Choose a destination...";
+            mapButton = dropdownHolder.transform.Find("MapButton").GetComponent<Button>();
+            mapButton.onClick.AddListener(MapButtonClicked);
+            okButton = dropdownHolder.transform.Find("OKButton").GetComponent<Button>();
+            okButton.onClick.AddListener(OKButtonClicked);
+
+            var mapButtonText = mapButton.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>();
+            mapButtonText.text = Localization.instance.Localize(mapButtonText.text);
+
+            var okButtonText = okButton.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>();
+            okButtonText.text = Localization.instance.Localize(okButtonText.text);
 
             if (dropdownHolder.transform.parent == null)
             {
@@ -83,6 +93,9 @@ namespace AnyPortal
                 var mapButtonImage = mapButton.GetComponent<Image>();
                 mapButtonImage.sprite = uiAtlas.GetSprite("button");
                 mapButtonImage.color = new Color(255, 255, 255);
+                var okButtonImage = okButton.GetComponent<Image>();
+                okButtonImage.sprite = uiAtlas.GetSprite("button");
+                okButtonImage.color = new Color(255, 255, 255);
 
             }
         }
@@ -106,7 +119,14 @@ namespace AnyPortal
             }
         }
 
-        public static void MapButtonClicked()
+        public static void OKButtonClicked()
+        {
+            lastPortalInteracted.SetText(TextInput.instance.m_textField.text);
+            TextInput.instance.Hide();
+            dropdownHolder.SetActive(false);
+            return;
+        }
+            public static void MapButtonClicked()
         {
             if (!lastPortalInteracted || !lastPortalZNetView || !lastPortalZNetView.IsValid())
                 return;
@@ -185,7 +205,7 @@ namespace AnyPortal
             }
         }
 
-        
+
 
         [HarmonyPatch(typeof(ZDOMan), "CreateSyncList")]
         static class ZDOmanCreateSyncListPatch
@@ -292,7 +312,7 @@ namespace AnyPortal
                         }
                     }
                 }
-                __result = Localization.instance.Localize($"Portal Tag: {tag}\nDestination Portal Tag: {destPortalTag}\n[<color=yellow><b>$KEY_Use</b></color> Configure Portal]");
+                __result = Localization.instance.Localize($"Portal Tag: {tag}\nDestination Portal Tag: {destPortalTag}\n[<color=yellow><b>$KEY_Use</b></color>] Configure Portal");
                 return false;
             }
         }
