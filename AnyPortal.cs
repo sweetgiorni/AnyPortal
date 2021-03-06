@@ -13,7 +13,7 @@ using AnyPortal;
 
 namespace AnyPortal
 {
-    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.3")]
+    [BepInPlugin("org.sweetgiorni.plugins.anyportal", "AnyPortal", "1.0.4")]
     public class AnyPortal : BaseUnityPlugin
     {
         public Harmony harmony;
