@@ -33,7 +33,7 @@ namespace AnyPortal
             dropdownHolder = null;
             dropdown = null;
 
-            anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal_asset);
+            anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
             if (!anyPortalAssetBundle)
             {
                 Debug.LogError($"Failed to read AssetBundle stream");
