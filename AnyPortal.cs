@@ -9,7 +9,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-
+using AnyPortal;
 
 namespace AnyPortal
 {
@@ -27,48 +27,16 @@ namespace AnyPortal
         public static ZNetView lastPortalZNetView;
         public static List<ZDO> portalList;
 
-        public const string AssetBundleName = "anyportal.asset";
-
         private void Awake()
         {
             portalList = new List<ZDO>();
             dropdownHolder = null;
             dropdown = null;
-            string asssemblyLocation = Assembly.GetExecutingAssembly().Location;
-            if (asssemblyLocation != null && asssemblyLocation != "")
-            {
-                asssemblyLocation = Path.GetDirectoryName(asssemblyLocation);
-            }
-            List<string> assetBundleSearchPaths = new List<string> {
-                Path.Combine(Paths.BepInExRootPath, "scripts"),
-                Path.Combine(Paths.PluginPath, "AnyPortal"),
-                asssemblyLocation
-            };
-            string assetBundlePath = "";
-            foreach (string searchPath in assetBundleSearchPaths)
-            {
-                if (searchPath == null || searchPath == "") continue;
-                var tmpPath = Path.Combine(searchPath, AssetBundleName);
-                Debug.Log($"Checking for file {tmpPath}");
-                if (File.Exists(tmpPath))
-                {
-                    assetBundlePath = tmpPath;
-                    break;
-                }
-            }
-            if (assetBundlePath == "")
-            {
-                Debug.LogError($"Couldn't find an AssetBundle named \"{AssetBundleName}\" in the given search paths. Is it really there?");
-                return;
-            }
-            else
-            {
-                Debug.Log($"Found AssetBundle at {assetBundlePath}");
-            }
-            anyPortalAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+
+            anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal_asset);
             if (!anyPortalAssetBundle)
             {
-                Debug.LogError($"Failed to load assset bundle from file {assetBundlePath}");
+                Debug.LogError($"Failed to read AssetBundle stream");
                 return;
             }
 
