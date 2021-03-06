@@ -8,11 +8,10 @@ RELEASE_DIR="AnyPortalRelease"
 
 rm -rf $RELEASE_DIR
 
-mkdir -p $RELEASE_DIR/AnyPortal
+mkdir -p $RELEASE_DIR
 
 # Game lib and AssetBundle
-cp bin/Debug/AnyPortal.dll $RELEASE_DIR/AnyPortal
-cp anyportal $RELEASE_DIR/AnyPortal
+cp bin/Debug/AnyPortal.dll $RELEASE_DIR/
 
 # Other stuff...
 cp icon.png $RELEASE_DIR
