@@ -33,21 +33,30 @@ namespace AnyPortal
             portalList = new List<ZDO>();
             dropdownHolder = null;
             dropdown = null;
-
-            anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
-            if (!anyPortalAssetBundle)
+            anyPortalAssetBundle = null;
+            if (Application.platform == RuntimePlatform.WindowsPlayer)
             {
-                Debug.LogError($"Failed to read AssetBundle stream");
-                return;
-            }
+                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
+                if (!anyPortalAssetBundle)
+                {
+                    Debug.LogError($"Failed to read AssetBundle stream");
+                    return;
+                }
 
+            }
             harmony = new Harmony("org.spub.plugins.anyportal.harmony");
             harmony.PatchAll();
+            Debug.Log("AnyPortal loaded succesfully.");
         }
 
         public static void InitializeDropdownHolder()
         {
             var sprite = TextInput.instance.m_panel.GetComponent<Image>();
+            if (anyPortalAssetBundle == null)
+            {
+                Debug.LogError("AnyPortal: Tried to access the AssetBundle before loading it!");
+                return;
+            }
             var dropdownTemplate = anyPortalAssetBundle.LoadAsset<GameObject>("assets/anyportal.prefab");
             if (!dropdownTemplate)
             {
