@@ -158,7 +158,7 @@ namespace AnyPortal
                 ZDOMan.instance.ForceSendZDO(lastPortalZNetView.GetZDO().m_uid);
                 return;
             }
-            var selectedPortalIdx = change.value - 1; // Need to +1 here because the first option is always "None"
+            var selectedPortalIdx = change.value - 1; // Need to add one here because the first option is always "None"
             if (selectedPortalIdx < 0 || selectedPortalIdx >= portalList.Count)
             {
                 Debug.LogError($"{selectedPortalIdx} is not a valid portal index.");
@@ -261,7 +261,10 @@ namespace AnyPortal
                 ZDOID targetZDOID = ___m_nview.GetZDO().GetZDOID("target");
 
                 dropdown.options.Add(new Dropdown.OptionData("No destination"));
-                ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, portalList);
+                var tmpPortalList = new List<ZDO>();
+                ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, tmpPortalList);
+                portalList = tmpPortalList.OrderBy(zdo => zdo.GetString("tag")).ToList();
+
                 int index = 0;
                 foreach (ZDO portalZDO in portalList)
                 {
