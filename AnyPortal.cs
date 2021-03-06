@@ -81,9 +81,8 @@ namespace AnyPortal
             if (!dropdownTemplate)
             {
                 Debug.LogError("Failed to load dropdown asset");
+                return;
             }
-            else
-            {
                 dropdownHolder = GameObject.Instantiate(dropdownTemplate);
                 dropdownHolder.transform.SetParent(null);
                 dropdownHolder.name = "AnyPortalControls";
@@ -92,7 +91,6 @@ namespace AnyPortal
                 dropdownHolder.transform.Find("Dropdown").Find("Label").GetComponent<Text>().text = "Choose a destination...";
                 mapButton = dropdownHolder.transform.Find("MapButton").GetComponent<Button>();
                 mapButton.onClick.AddListener(MapButtonClicked);
-            }
 
             if (dropdownHolder.transform.parent == null)
             {
