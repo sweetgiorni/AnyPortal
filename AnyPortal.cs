@@ -8,6 +8,7 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 
 namespace AnyPortal
@@ -103,6 +104,18 @@ namespace AnyPortal
                 dropdownHolder.transform.SetParent(uiRoot.transform);
                 dropdownHolder.transform.localScale = new Vector3(1f, 1f, 1f);
                 dropdownHolder.transform.localPosition = new Vector3(0, -50, 0);
+            }
+
+            var uiAtlas = Resources.FindObjectsOfTypeAll<UnityEngine.U2D.SpriteAtlas>().Single(a => a.name == "UIAtlas");
+            if (uiAtlas)
+            {
+                var dropdownImage = dropdown.GetComponent<Image>();
+                dropdownImage.sprite = uiAtlas.GetSprite("text_field");
+                dropdownImage.color = new Color(255, 255, 255);
+                var mapButtonImage = mapButton.GetComponent<Image>();
+                mapButtonImage.sprite = uiAtlas.GetSprite("button");
+                mapButtonImage.color = new Color(255, 255, 255);
+
             }
         }
 
