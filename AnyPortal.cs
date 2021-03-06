@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -26,7 +26,7 @@ namespace AnyPortal
         public static ZNetView lastPortalZNetView;
         public static List<ZDO> portalList;
 
-        public const string AssetBundleName = "anyportal";
+        public const string AssetBundleName = "anyportal.asset";
 
         private void Awake()
         {
