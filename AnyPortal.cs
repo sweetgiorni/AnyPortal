@@ -239,7 +239,7 @@ namespace AnyPortal
             {
                 lastPortalInteracted = __instance;
                 lastPortalZNetView = ___m_nview;
-
+                
                 if (!__result)
                 {
                     return;
@@ -256,6 +256,7 @@ namespace AnyPortal
                     DropdownValueChanged(dropdown);
                 });
                 dropdown.options.Clear();
+                ZDOID thisPortalZDOID = ___m_nview.GetZDO().m_uid;
                 // If the portal currently has a target configured, make sure that is the value selected in the dropdown
                 // Otherwise, set the dropdown value to 0 (No destination)
                 ZDOID targetZDOID = ___m_nview.GetZDO().GetZDOID("target");
@@ -263,13 +264,16 @@ namespace AnyPortal
                 dropdown.options.Add(new Dropdown.OptionData("No destination"));
                 var tmpPortalList = new List<ZDO>();
                 ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, tmpPortalList);
-                portalList = tmpPortalList.OrderBy(zdo => zdo.GetString("tag")).ToList();
-
+                // Sort alphabetically by portal tag and exclude self
+                portalList = tmpPortalList.OrderBy(zdo => zdo.GetString("tag")).Where(zdo => zdo.m_uid != thisPortalZDOID).ToList();
                 int index = 0;
                 foreach (ZDO portalZDO in portalList)
                 {
                     float distance = Vector3.Distance(__instance.transform.position, portalZDO.GetPosition());
-
+                    if (distance == 0f)
+                    {
+                        continue;
+                    }
                     dropdown.options.Add(new Dropdown.OptionData($"\"{portalZDO.GetString("tag")}\"  --  Distance: " + (int)distance));
                     if (portalZDO.m_uid == targetZDOID)
                         dropdown.value = index + 1;
