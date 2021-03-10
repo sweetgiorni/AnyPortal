@@ -34,7 +34,7 @@ namespace AnyPortal
             dropdownHolder = null;
             dropdown = null;
             anyPortalAssetBundle = null;
-            if (Application.platform == RuntimePlatform.WindowsPlayer)
+            if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.LinuxPlayer)
             {
                 anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
                 if (!anyPortalAssetBundle)
