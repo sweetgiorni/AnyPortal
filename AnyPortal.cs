@@ -274,7 +274,7 @@ namespace AnyPortal
                 var tmpPortalList = new List<ZDO>();
                 ZDOMan.instance.GetAllZDOsWithPrefab(Game.instance.m_portalPrefab.name, tmpPortalList);
                 // Sort alphabetically by portal tag and exclude self
-                portalList = tmpPortalList.OrderBy(zdo => zdo.GetString("tag")).Where(zdo => zdo.m_uid != thisPortalZDOID).ToList();
+                portalList = tmpPortalList.OrderBy(zdo => zdo.GetString("tag")).Where(zdo => (zdo.m_uid != thisPortalZDOID) && zdo.IsOwner()).ToList();
                 int index = 0;
                 foreach (ZDO portalZDO in portalList)
                 {
