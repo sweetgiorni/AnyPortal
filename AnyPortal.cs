@@ -36,14 +36,15 @@ namespace AnyPortal
             anyPortalAssetBundle = null;
             if (Application.platform == RuntimePlatform.WindowsPlayer)
             {
-                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
-                if (!anyPortalAssetBundle)
+                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal_windows);
+            } else if (Application.platform == RuntimePlatform.LinuxPlayer) {
+                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal_linux);
+            }
+            if (!anyPortalAssetBundle)
                 {
                     Debug.LogError($"Failed to read AssetBundle stream");
                     return;
                 }
-
-            }
             harmony = new Harmony("org.spub.plugins.anyportal.harmony");
             harmony.PatchAll();
             Debug.Log("AnyPortal loaded succesfully.");

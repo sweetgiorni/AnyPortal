@@ -63,9 +63,19 @@ namespace AnyPortal.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] anyportal {
+        internal static byte[] anyportal_windows {
             get {
-                object obj = ResourceManager.GetObject("anyportal", resourceCulture);
+                object obj = ResourceManager.GetObject("anyportal_windows", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] anyportal_linux {
+            get {
+                object obj = ResourceManager.GetObject("anyportal_linux", resourceCulture);
                 return ((byte[])(obj));
             }
         }

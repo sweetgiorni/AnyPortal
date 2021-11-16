@@ -118,7 +118,11 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="anyportal" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\AnyPortalUnity\Assets\AssetBundles\anyportal.unitypackage;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="anyportal_windows" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\AnyPortalUnity\Assets\AssetBundles\Windows\anyportal.unitypackage;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="anyportal_linux" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\AnyPortalUnity\Assets\AssetBundles\Linux\anyportal.unitypackage;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+
 </root>

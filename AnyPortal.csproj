@@ -149,7 +149,8 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AnyPortalUnity\Assets\AssetBundles\anyportal.unitypackage" />
+    <None Include="AnyPortalUnity\Assets\AssetBundles\Windows\anyportal.unitypackage" />
+    <None Include="AnyPortalUnity\Assets\AssetBundles\Linux\anyportal.unitypackage" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
