@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>AnyPortalRelease\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -68,10 +68,6 @@
       <HintPath>libs\Mono.Posix.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Mono.Security">
-      <HintPath>libs\Mono.Security.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
       <HintPath>libs\UnityEngine.dll</HintPath>
@@ -90,9 +86,9 @@
       <HintPath>libs\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\unstripped_corlib\UnityEngine.InputLegacyModule.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>libs\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule">
       <HintPath>libs\UnityEngine.InputModule.dll</HintPath>
@@ -104,14 +100,6 @@
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>libs\UnityEngine.PhysicsModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\unstripped_corlib\UnityEngine.SpriteMaskModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteShapeModule">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\unstripped_corlib\UnityEngine.SpriteShapeModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.TerrainModule">
@@ -143,6 +131,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +139,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AnyPortalUnity\Assets\AssetBundles\anyportal.unitypackage" />
+    <None Include="AnyPortalUnity\Assets\AssetBundles\Linux64\anyportal.unitypackage" />
+    <None Include="AnyPortalUnity\Assets\AssetBundles\Win64\anyportal.unitypackage" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="UnityEngine.InputLegacyModule.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

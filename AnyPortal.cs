@@ -36,7 +36,7 @@ namespace AnyPortal
             anyPortalAssetBundle = null;
             if (Application.platform == RuntimePlatform.WindowsPlayer)
             {
-                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportal);
+                anyPortalAssetBundle = AssetBundle.LoadFromMemory(Properties.Resources.anyportalAssetsWin64);
                 if (!anyPortalAssetBundle)
                 {
                     Debug.LogError($"Failed to read AssetBundle stream");
