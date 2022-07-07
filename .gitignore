@@ -3,13 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# Don't package Valheim proprietary assets...
-libs/*.dll
-
-
-*.zip
-AnyPortalRelease/*
-
 # User-specific files
 *.rsuser
 *.suo
@@ -367,3 +360,17 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# csproj.user file (for local environment)
+*.csproj.user
+
+# not the libraries folder
+!libraries/*
+.idea/
+
+# not the valheim path file
+Environment.props
+
+# not the generated dll for thunderstore
+*/Package/plugins/*
+AnyPortal/Package/README.md 

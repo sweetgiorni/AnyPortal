@@ -13,18 +13,18 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - effect
+  - character
+  - piece
+  - terrain
+  - item
+  - ghost
+  - character_trigger
+  - static_solid
+  - piece_nonsolid
+  - character_ghost
+  - hitbox
+  - skybox
   - 
   - 
   - 
