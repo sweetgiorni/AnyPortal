@@ -158,16 +158,26 @@ namespace AnyPortal
         {
             if (!lastPortalInteracted || !lastPortalZNetView || !lastPortalZNetView.IsValid())
                 return;
-            // Get selected portal pos
+
             dropdownHolder.SetActive(false);
             TextInput.instance.Hide();
-            var selectedPortalZDOID = lastPortalZNetView.GetZDO().GetZDOID("target");// GetPosition();
+
+            // Get selected portal ZDO ID
+            var selectedPortalZDOID = lastPortalZNetView.GetZDO().GetZDOID("target");
             if (selectedPortalZDOID.IsNone()) return;
+
+            // Get selected portal ZDO object
             var selectedPortalZDO = ZDOMan.instance.GetZDO(selectedPortalZDOID);
             if (!selectedPortalZDO.IsValid()) return;
+
+            // Get selected portal pos and tag
             Vector3 selectedPortalPos = selectedPortalZDO.GetPosition();
-            // Using 0 for targetPeerID should basically be the equivalent of a network loopback (localhost)
-            ZRoutedRpc.instance.InvokeRoutedRPC(0, "ChatMessage", new object[] { selectedPortalPos, 3, "AnyPortal", "PortalName" });
+            string selectedPortalTag = selectedPortalZDO.GetString("tag", "AnyPortal");
+
+            // Send ping to all players
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "ChatMessage", selectedPortalPos, 3, selectedPortalTag, string.Empty, 1);
+
+            // Show location on the map
             Minimap.instance.ShowPointOnMap(selectedPortalPos);
         }
 
