@@ -1,3 +1,5 @@
+# This Valheim mod is *dead*. It is no longer maintained and it has been deprecated in favor of [XPortal](https://github.com/SpikeHimself/XPortal).
+
 # AnyPortal
 
 A Valheim mod stub project using [Jötunn](https://github.com/Valheim-Modding/Jotunn) including build tools and a basic Unity project stub. There is no actual plugin content included, just a bare minimum plugin class. 
